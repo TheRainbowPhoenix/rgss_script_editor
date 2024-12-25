@@ -1,6 +1,4 @@
-extern "C" {
-#include <zlib.h>
-}
+#include <QtZlib/zlib.h>
 
 #include "ruby_data.hxx"
 #include <QtCore/QFileInfo>
@@ -355,7 +353,7 @@ static void writeScript(QIODevice &dev, const Script &script,
   QString sdata;
   sdata.reserve(script.data.size());
 
-  for (size_t i = 0; i < script.data.size(); ++i) {
+  for (int i = 0; i < script.data.size(); ++i) {
     QChar c = script.data.at(i);
 
     if (c == QChar('\n')) {
@@ -413,7 +411,7 @@ void writeScripts(const ScriptList &scripts,
 int generateMagic(const ScriptList &scripts)
 {
   QSet<int> ids;
-  for (size_t i = 0; i < scripts.size(); ++i)
+  for (int i = 0; i < scripts.size(); ++i)
     ids.insert(scripts[i].magic);
 
   int result;

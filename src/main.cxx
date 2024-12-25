@@ -3,9 +3,20 @@
 
 #include <QtWidgets/QApplication>
 #include <QtCore/QTextCodec>
+#include <QTranslator>
+#include <QLocale>
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
+
+  QTranslator translator;
+  QString locale = QLocale::system().name();
+  QString translationPath = QCoreApplication::applicationDirPath() + "/translations";
+
+  // Loading QScintilla translations
+  if (translator.load(QString("qscintilla_") + locale, translationPath)) {
+      app.installTranslator(&translator);
+  }
 
   QString initial_path;
   if(argc >= 2) {

@@ -2,3 +2,4 @@ src/qt/moc_*
 Makefile
 build/
 *_parameters
+*.pro.user
