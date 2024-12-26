@@ -554,8 +554,10 @@ void RGSS_MainWindow::onImportScripts()
   }
 
   QTextStream indStream(&indFile);
+  indStream.setCodec("UTF-8");
   ScriptList scripts;
 
+  int lineNumber = 0;
   while (!indStream.atEnd())
   {
     QString line = indStream.readLine();
@@ -567,20 +569,21 @@ void RGSS_MainWindow::onImportScripts()
     }
 
     bool parseOK;
-    QString scFilename = line.left(8);
-    quint32 scID = scFilename.toUInt(&parseOK, 16);
+    QString scIDStr = line.left(8);
+    quint32 scID = scIDStr.toUInt(&parseOK, 16);
 
     if (!parseOK) {
-      QMessageBox::critical(this, "Importing error.", "Bad script ID: " + scFilename);
+      QMessageBox::critical(this, "Importing error.", "Bad script ID: " + scIDStr);
       return;
     }
 
     QString scName = line.mid(9);
-    QFile scFile(src_folder + "/" + scFilename);
+    QString rbName = QString("%1_%2.rb").arg(lineNumber++, 3, 10, QLatin1Char('0')).arg(line.mid(9));
+    QFile scFile(src_folder + "/" + rbName);
 
     if (!scFile.open(QFile::ReadOnly)) {
       QMessageBox::critical(this, "File reading error.",
-                            QString("Cannot open script \"%1\" (%2)").arg(scName, scFilename));
+                            QString("Cannot open script \"%1\" (%2)").arg(rbName, scIDStr));
       return;
     }
 
@@ -604,6 +607,7 @@ void RGSS_MainWindow::onImportScripts()
   setDataModified(true);
 
   last_valid_folder_impexp = QFileInfo(src_folder).absolutePath();
+  QMessageBox::information(this, "脚本导入", "脚本导入成功!");
 }
 
 void RGSS_MainWindow::onExportScripts()
@@ -617,13 +621,14 @@ void RGSS_MainWindow::onExportScripts()
   /* Write index */
   QFile indFile(dest_folder + "/index");
   if (!indFile.open(QFile::WriteOnly)) {
-    QMessageBox::critical(this, "Importing error.", "Cannot open index file");
+    QMessageBox::critical(this, "Exporting error.", "Cannot open index file");
     return;
   }
 
   storeChangedScripts();
 
   QTextStream indStream(&indFile);
+  indStream.setCodec("UTF-8");
   ScriptList scripts = archive_.scriptList();
 
   for (int i = 0; i < scripts.count(); ++i)
@@ -633,9 +638,9 @@ void RGSS_MainWindow::onExportScripts()
 
     indStream << scID << QChar('~') << sc.name << "\n";
 
-    QFile scFile(dest_folder + "/" + scID);
+    QString rbName = QString("%1_%2.rb").arg(i, 3, 10, QLatin1Char('0')).arg(sc.name);
+    QFile scFile(dest_folder + "/" + rbName);
     if (!scFile.open(QFile::WriteOnly)) {
-
       break;
     }
 
@@ -647,6 +652,7 @@ void RGSS_MainWindow::onExportScripts()
   indFile.close();
 
   last_valid_folder_impexp = QFileInfo(dest_folder).absolutePath();
+  QMessageBox::information(this, "脚本导出", "脚本导出成功!");
 }
 
 void RGSS_MainWindow::onCloseArchive()

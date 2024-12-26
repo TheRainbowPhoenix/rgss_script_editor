@@ -233,8 +233,8 @@ static void verifyHeader(QIODevice &dev)
 {
   const char *error = "Bad marshal header";
 
-  verifyByte(dev, 4, error);
-  verifyByte(dev, 8, error);
+  verifyByte(dev, 0x04, error);
+  verifyByte(dev, 0x08, error);
 }
 
 static void writeByte(QIODevice &dev, char byte)
