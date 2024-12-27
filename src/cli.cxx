@@ -1,4 +1,3 @@
-
 #include "ruby_data.hxx"
 
 #include <QtCore/QFileInfo>
@@ -7,8 +6,6 @@
 #include <QtCore/QTextStream>
 
 #include <iostream>
-
-using namespace std;
 
 int saveScripts(QString const& file, const ScriptList &scripts) {
   /* Determine marshal format */
@@ -23,13 +20,13 @@ int saveScripts(QString const& file, const ScriptList &scripts) {
   else if (fileExt == "rvdata2")
     format = Script::VXAce;
   else {
-    cerr << "Unrecognized file extension: " << fileExt.toUtf8().constData() << endl;
+    std::cerr << "Unrecognized file extension: " << fileExt.toUtf8().constData() << std::endl;
     return 1;
   }
 
   QFile archiveFile(file);
   if (!archiveFile.open(QFile::WriteOnly)) {
-    cerr << "Cannot open for writing: " << file.toUtf8().constData() << endl;
+    std::cerr << "Cannot open for writing: " << file.toUtf8().constData() << std::endl;
     return 1;
   }
 
@@ -38,7 +35,7 @@ int saveScripts(QString const& file, const ScriptList &scripts) {
     archiveFile.close();
   }
   catch (const QByteArray &) {
-    cerr << "Cannot save: " << file.toUtf8().constData() << endl;
+    std::cerr << "Cannot save: " << file.toUtf8().constData() << std::endl;
     return 1;
   }
 
@@ -52,22 +49,39 @@ int import(QString src_folder, ScriptList &scripts) {
 	/* Open index */
 	QFile indFile(src_folder + "/index");
 	if (!indFile.open(QFile::ReadOnly)) {
-		cerr << "Cannot open index file" << endl;
+		std::cerr << "Cannot open index file" << std::endl;
 		return 1;
 	}
 
 	QTextStream indStream(&indFile);
-	int scIdx = 0;
+	indStream.setCodec("UTF-8");
 
+	int lineNumber = 0;
 	while (!indStream.atEnd())
 	{
-		QString scName = indStream.readLine();
+		QString line = indStream.readLine();
 
-		QString scFilename = QString("%1").arg(scIdx, 3, 10, QLatin1Char('0'));
-		QFile scFile(src_folder + "/" + scFilename);
+		/* Minimum is 32bit ID (8 chars) + space */
+		if (line.size() < 8 + 1) {
+            std::cerr << "Index entry too short: " << line.constData() << std::endl;
+			return 1;
+		}
+
+		bool parseOK;
+		QString scIDStr = line.left(8);
+		quint32 scID = scIDStr.toUInt(&parseOK, 16);
+
+		if (!parseOK) {
+            std::cerr << "Bad script ID: " << scIDStr.constData() << std::endl;
+			return 1;
+		}
+
+		QString scName = line.mid(9);
+		QString rbName = QString("%1_%2.rb").arg(lineNumber++, 3, 10, QLatin1Char('0')).arg(line.mid(9));
+    	QFile scFile(src_folder + "/" + rbName);
 
 		if (!scFile.open(QFile::ReadOnly)) {
-			cerr << QString("Cannot open script \"%1\" (%2)").arg(scName, scFilename).toUtf8().constData() << endl;
+			std::cerr << QString("Cannot open script \"%1\" (%2)").arg(rbName, scIDStr).toUtf8().constData() << std::endl;
 			return 1;
 		}
 
@@ -75,13 +89,11 @@ int import(QString src_folder, ScriptList &scripts) {
 		scFile.close();
 
 		Script script;
-		script.magic = 0;
+		script.magic = scID;
 		script.name = scName;
 		script.data = scData;
 
 		scripts.append(script);
-
-		++scIdx;
 	}
 
 	return 0;
@@ -89,13 +101,20 @@ int import(QString src_folder, ScriptList &scripts) {
 
 int main(int argc, char* argv[]) {
 	if (argc < 3) {
-		puts("Wrong number of arguments (cli <input directory> <output filename>)");
+		puts("Wrong number of arguments (rgss_script_console <input directory> <output filename>)");
 		return 1;
 	}
+
 	const QString src_folder = QString::fromLocal8Bit(argv[1]);
 	const QString out_file = QString::fromLocal8Bit(argv[2]);
+
 	ScriptList scripts;
-	if (import(src_folder, scripts)) return 1;
-	if (saveScripts(out_file, scripts)) return 1;
+	if (import(src_folder, scripts))
+		return 1;
+
+	if (saveScripts(out_file, scripts))
+		return 1;
+
+	std::cout << "Importing Done!" << std::endl;
 	return 0;
 }

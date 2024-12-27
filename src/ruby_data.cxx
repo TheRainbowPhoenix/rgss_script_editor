@@ -9,8 +9,6 @@
 #define LINEEND_INT "\n"
 #define LINEEND_EXT "\r\n"
 
-
-
 bool parseScript(std::string const&) {
   // TODO
   return true;
@@ -85,35 +83,35 @@ static void verifyByte(QIODevice &dev, char expected,
     throw QByteArray(error);
 }
 
-static int readFixnum(QIODevice &dev)
+static int readFixnum(QIODevice &dev, bool noHeader = false)
 {
-  char head = readByte(dev);
+  char head = noHeader ? 4 : readByte(dev);
 
   if (head == 0)
-          return 0;
+    return 0;
   else if (head > 5)
-          return head - 5;
+    return head - 5;
   else if (head < -4)
-          return head + 5;
+    return head + 5;
 
   int pos = (head > 0);
   int len = pos ? head : head * -1;
 
-  char n1, n2, n3, n4;
+  uint8_t n1, n2, n3, n4;
 
   if (pos)
-          n2 = n3 = n4 = 0;
+    n2 = n3 = n4 = 0;
   else
-          n2 = n3 = n4 = 0xFF;
+    n2 = n3 = n4 = 0xFF;
 
-  n1 = readByte(dev);
+  n1 = static_cast<uint8_t>(readByte(dev));
 
   if (len >= 2)
-          n2 = readByte(dev);
+    n2 = static_cast<uint8_t>(readByte(dev));
   if (len >= 3)
-          n3 = readByte(dev);
+    n3 = static_cast<uint8_t>(readByte(dev));
   if (len >= 4)
-          n4 = readByte(dev);
+    n4 = static_cast<uint8_t>(readByte(dev));
 
   int result = ((0xFF << 0x00) & (n1 << 0x00))
              | ((0xFF << 0x08) & (n2 << 0x08))
@@ -211,8 +209,17 @@ static Script readScript(QIODevice &dev)
     throw QByteArray("Bad data");
 
   /* Read magic */
-  verifyByte(dev, 'i');
-  script.magic = readFixnum(dev);
+  char type = readByte(dev);
+  if (type == 'l') // bignum
+  {
+    verifyByte(dev, '+'); // it shoule be
+    verifyByte(dev, 0x07); // short count must be 7?
+    script.magic = readFixnum(dev, true);
+  }
+  else if (type == 'i') // fixnum
+    script.magic = readFixnum(dev);
+  else
+    throw QByteArray("Bad data");
 
   /* Read name */
   script.name = UTF8ToQString(readRubyString(dev));

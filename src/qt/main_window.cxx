@@ -18,6 +18,7 @@
 #include <QtCore/QTextStream>
 #include <QtCore/QSettings>
 #include <QtCore/QRegExp>
+#include <QRegularExpression>
 
 #include <Qsci/qscilexerruby.h>
 
@@ -198,7 +199,9 @@ void RGSS_MainWindow::setupEditor(QsciScintilla &editor)
   editor.setEolMode(QsciScintilla::EolWindows);
 
   // indent
-  editor.setIndentationWidth(2);
+  editor.setIndentationWidth(4);
+  editor.setIndentationsUseTabs(false);
+  editor.setTabWidth(4);
   editor.setAutoIndent(true);
 
   // lexer and font
@@ -535,6 +538,13 @@ bool RGSS_MainWindow::onSaveArchiveAs() {
   return saveScriptArchiveAs(f);
 }
 
+static QString filterInvalidFilenameChars(const QString& input) {
+    QString result = input;
+    QRegularExpression invalidCharsRegex(R"([<>:"/\\|?*])");
+    result.replace(invalidCharsRegex, "");
+    return result;
+}
+
 void RGSS_MainWindow::onImportScripts()
 {
   if (!verifySaveDiscard("Import Scripts"))
@@ -636,9 +646,10 @@ void RGSS_MainWindow::onExportScripts()
     const Script &sc = scripts[i];
     const QString scID = QString("%1").arg(sc.magic, 8, 16, QLatin1Char('0')).toUpper();
 
-    indStream << scID << QChar('~') << sc.name << "\n";
+    QString scName = filterInvalidFilenameChars(sc.name);
+    indStream << scID << QChar('~') << scName << "\n";
 
-    QString rbName = QString("%1_%2.rb").arg(i, 3, 10, QLatin1Char('0')).arg(sc.name);
+    QString rbName = QString("%1_%2.rb").arg(i, 3, 10, QLatin1Char('0')).arg(scName);
     QFile scFile(dest_folder + "/" + rbName);
     if (!scFile.open(QFile::WriteOnly)) {
       break;
