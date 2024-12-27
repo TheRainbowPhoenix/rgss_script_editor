@@ -24,6 +24,9 @@ int main(int argc, char* argv[]) {
   }
 
   RGSS_MainWindow main(initial_path);
+
+  QIcon windowIcon(":/res/logo.ico");
+  main.setWindowIcon(windowIcon);
   main.show();
 
   main.activateWindow();

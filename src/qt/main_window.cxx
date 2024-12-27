@@ -48,70 +48,70 @@ RGSS_MainWindow::RGSS_MainWindow(const QString &path_to_load,
   /* Setup UI */
   QMenuBar* const menu_bar = new QMenuBar(this);
   {
-    QMenu* const file = new QMenu(tr("File"), menu_bar);
+    QMenu* const file = new QMenu(tr("文件"), menu_bar);
 
-    QAction* const open = new QAction(tr("Open"), menu_bar);
+    QAction* const open = new QAction(tr("打开"), menu_bar);
     open->setShortcut(QKeySequence(QKeySequence::Open));
     connect(open, SIGNAL(triggered()), SLOT(onOpenArchive()));
     file->addAction(open);
 
-    QAction* const save = new QAction(tr("Save"), menu_bar);
+    QAction* const save = new QAction(tr("保存"), menu_bar);
     save->setShortcut(QKeySequence(QKeySequence::Save));
     connect(save, SIGNAL(triggered()), SLOT(onSaveArchive()));
     file->addAction(save);
 
-    QAction* const save_as = new QAction(tr("Save As"), menu_bar);
+    QAction* const save_as = new QAction(tr("另存为"), menu_bar);
     save_as->setShortcut(QKeySequence(QKeySequence::SaveAs));
     connect(save_as, SIGNAL(triggered()), SLOT(onSaveArchiveAs()));
     file->addAction(save_as);
 
     file->addSeparator();
 
-    QAction* const imp_scripts = new QAction(tr("Import Scripts"), menu_bar);
+    QAction* const imp_scripts = new QAction(tr("导入脚本"), menu_bar);
     connect(imp_scripts, SIGNAL(triggered()), SLOT(onImportScripts()));
     file->addAction(imp_scripts);
 
-    QAction* const exp_scripts = new QAction(tr("Export Scripts"), menu_bar);
+    QAction* const exp_scripts = new QAction(tr("导出脚本"), menu_bar);
     connect(exp_scripts, SIGNAL(triggered()), SLOT(onExportScripts()));
     file->addAction(exp_scripts);
 
     file->addSeparator();
 
-    QAction* const close = new QAction(tr("Close"), menu_bar);
+    QAction* const close = new QAction(tr("关闭文档"), menu_bar);
     close->setShortcut(QKeySequence(QKeySequence::Close));
     connect(close, SIGNAL(triggered()), SLOT(onCloseArchive()));
     file->addAction(close);
 
-    edit_menu_.setTitle(tr("Edit"));
+    edit_menu_.setTitle(tr("编辑"));
 
-    QAction* const insert = new QAction(tr("Insert"), menu_bar);
+    QAction* const insert = new QAction(tr("插入"), menu_bar);
     connect(insert, SIGNAL(triggered()), SLOT(onInsertScript()));
     edit_menu_.addAction(insert);
 
-    delete_action_ = new QAction(tr("Delete"), menu_bar);
+    delete_action_ = new QAction(tr("删除"), menu_bar);
     connect(delete_action_, SIGNAL(triggered()), SLOT(onDeleteScript()));
     delete_action_->setShortcut(QKeySequence(QKeySequence::Delete));
     edit_menu_.addAction(delete_action_);
 
-    pin_action_ = new QAction(tr("Pin"), menu_bar);
+    pin_action_ = new QAction(tr("固定"), menu_bar);
     connect(pin_action_, SIGNAL(triggered()), SLOT(onPinScript()));
     edit_menu_.addAction(pin_action_);
 
     edit_menu_.addSeparator();
 
-    QAction *find = new QAction(tr("Find"), menu_bar);
+    QAction *find = new QAction(tr("查找"), menu_bar);
     find->setShortcut(QKeySequence(QKeySequence::Find));
     connect(find, SIGNAL(triggered()), SLOT(onShowSearchBar()));
     edit_menu_.addAction(find);
 
-    QAction *goline = new QAction(tr("Go to line"), menu_bar);
+    QAction *goline = new QAction(tr("跳转到行"), menu_bar);
     goline->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_L));
     connect(goline, SIGNAL(triggered()), SLOT(onGotoLine()));
     edit_menu_.addAction(goline);
 
     QMenu *view = new QMenu(this);
-    view->setTitle(tr("View"));
-    QAction *scriptnum = new QAction(tr("Show script indices"), menu_bar);
+    view->setTitle(tr("视图"));
+    QAction *scriptnum = new QAction(tr("显示脚本序号"), menu_bar);
     scriptnum->setCheckable(true);
     scriptnum->setChecked(archive_.scriptNumsVisible());
     connect(scriptnum, SIGNAL(toggled(bool)), &archive_, SLOT(setScriptNumsVisible(bool)));
@@ -124,10 +124,11 @@ RGSS_MainWindow::RGSS_MainWindow(const QString &path_to_load,
   setMenuBar(menu_bar);
 
   splitter_.setOrientation(Qt::Horizontal);
+  splitter_.setHandleWidth(0);
   setCentralWidget(&splitter_);
 
   QMenu *pinned_menu = new QMenu(this);
-  pinned_menu->addAction(tr("Unpin"), this, SLOT(onUnpinScript()));
+  pinned_menu->addAction(tr("取消固定"), this, SLOT(onUnpinScript()));
   pinned_list_.setContextMenu(pinned_menu);
 
   pinned_model_.setSourceModel(&archive_);
@@ -319,7 +320,7 @@ void RGSS_MainWindow::setDataModified(bool m)
 
 void RGSS_MainWindow::onArchiveDropped(const QString &filename)
 {
-  if (!verifySaveDiscard(tr("Open Archive")))
+  if (!verifySaveDiscard(tr("打开脚本文档")))
     return;
 
   if (archive_opened)
@@ -469,7 +470,7 @@ void RGSS_MainWindow::updateWindowTitle() {
     title = open_path;
 
   if (title.isEmpty() && archive_opened)
-    title = "(Untitled)";
+    title = "RGSS Scripts Editor";
 
   if (data_modified_)
     title.prepend("*");
@@ -494,7 +495,7 @@ void RGSS_MainWindow::onScriptCountChanged(int newCount)
 
 void RGSS_MainWindow::closeEvent(QCloseEvent *ce)
 {
-  if (!verifySaveDiscard(tr("Exit Editor")))
+  if (!verifySaveDiscard(tr("退出编辑器")))
     ce->ignore();
   else
     ce->accept();
@@ -510,16 +511,16 @@ void RGSS_MainWindow::closeEvent(QCloseEvent *ce)
 
 static const char *fileFilter =
     QT_TRANSLATE_NOOP("RGSS_MainWindow",
-    "Script Archive (Scripts.rxdata Scripts.rvdata Scripts.rvdata2);;"
-    "All files (*)");
+    "脚本文档 (Scripts.rxdata Scripts.rvdata Scripts.rvdata2);;"
+    "所有文件 (*)");
 
 void RGSS_MainWindow::onOpenArchive() {
 
-  if (!verifySaveDiscard(tr("Open Archive")))
+  if (!verifySaveDiscard(tr("打开脚本文档")))
     return;
 
   QString const f = QFileDialog::getOpenFileName(
-      this, tr("Select script archive to open..."), last_valid_folder, tr(fileFilter));
+      this, tr("选择要打开的脚本文档..."), last_valid_folder, tr(fileFilter));
 
   if(f.isNull()) { return; } // check cancel
 
@@ -531,7 +532,7 @@ void RGSS_MainWindow::onOpenArchive() {
 
 bool RGSS_MainWindow::onSaveArchiveAs() {
   QString const f = QFileDialog::getSaveFileName(
-      this, tr("Select saving file..."), last_valid_folder, tr(fileFilter));
+      this, tr("另存为..."), last_valid_folder, tr(fileFilter));
 
   if(f.isNull()) { return false; } // check cancel
 
@@ -551,7 +552,7 @@ void RGSS_MainWindow::onImportScripts()
     return;
 
   const QString src_folder = QFileDialog::getExistingDirectory(
-        this, tr("Select import folder..."), last_valid_folder_impexp);
+        this, tr("选择导入文件夹..."), last_valid_folder_impexp);
 
   if (src_folder.isEmpty())
     return;
@@ -559,7 +560,7 @@ void RGSS_MainWindow::onImportScripts()
   /* Open index */
   QFile indFile(src_folder + "/index");
   if (!indFile.open(QFile::ReadOnly)) {
-    QMessageBox::critical(this, "Importing error.", "Cannot open index file");
+    QMessageBox::critical(this, "导入错误", "无法打开 index 文件");
     return;
   }
 
@@ -574,7 +575,7 @@ void RGSS_MainWindow::onImportScripts()
 
     /* Minimum is 32bit ID (8 chars) + space */
     if (line.size() < 8 + 1) {
-      QMessageBox::critical(this, "Importing error.", "Index entry too short: " + line);
+      QMessageBox::critical(this, "导入错误", "Index 文件中的项过短: " + line);
       return;
     }
 
@@ -583,7 +584,7 @@ void RGSS_MainWindow::onImportScripts()
     quint32 scID = scIDStr.toUInt(&parseOK, 16);
 
     if (!parseOK) {
-      QMessageBox::critical(this, "Importing error.", "Bad script ID: " + scIDStr);
+      QMessageBox::critical(this, "导入错误", "错误的脚本 ID: " + scIDStr);
       return;
     }
 
@@ -592,8 +593,8 @@ void RGSS_MainWindow::onImportScripts()
     QFile scFile(src_folder + "/" + rbName);
 
     if (!scFile.open(QFile::ReadOnly)) {
-      QMessageBox::critical(this, "File reading error.",
-                            QString("Cannot open script \"%1\" (%2)").arg(rbName, scIDStr));
+      QMessageBox::critical(this, "读取文件错误",
+                            QString("无法打开脚本 \"%1\" (%2)").arg(rbName, scIDStr));
       return;
     }
 
@@ -623,7 +624,7 @@ void RGSS_MainWindow::onImportScripts()
 void RGSS_MainWindow::onExportScripts()
 {
   const QString dest_folder = QFileDialog::getExistingDirectory(
-        this, tr("Select export folder..."), last_valid_folder_impexp);
+        this, tr("选择导出文件夹..."), last_valid_folder_impexp);
 
   if (dest_folder.isEmpty())
     return;
@@ -631,7 +632,7 @@ void RGSS_MainWindow::onExportScripts()
   /* Write index */
   QFile indFile(dest_folder + "/index");
   if (!indFile.open(QFile::WriteOnly)) {
-    QMessageBox::critical(this, "Exporting error.", "Cannot open index file");
+    QMessageBox::critical(this, "导出错误", "无法创建 index 文件");
     return;
   }
 
@@ -668,7 +669,7 @@ void RGSS_MainWindow::onExportScripts()
 
 void RGSS_MainWindow::onCloseArchive()
 {
-  if (!verifySaveDiscard(tr("Close Archive")))
+  if (!verifySaveDiscard(tr("关闭脚本文档")))
     return;
 
   closeScriptArchive();
@@ -742,7 +743,7 @@ void RGSS_MainWindow::loadScriptArchive(QString const& file, bool show_errors) {
   QFile archiveFile(file);
   if (!archiveFile.open(QFile::ReadOnly)) {
     if (show_errors)
-      QMessageBox::critical(this, "File reading error.", "Cannot open file: " + file);
+      QMessageBox::critical(this, "文件读取错误", "无法打开文件: " + file);
     return;
   }
 
@@ -752,7 +753,7 @@ void RGSS_MainWindow::loadScriptArchive(QString const& file, bool show_errors) {
   }
   catch (const QByteArray &error) {
     if (show_errors)
-      QMessageBox::critical(this, "File reading error.", "Cannot read: " + file + "\n" + error);
+      QMessageBox::critical(this, "文件读取错误", "无法读取: " + file + "\n" + error);
     return;
   }
 
@@ -786,13 +787,13 @@ bool RGSS_MainWindow::saveScriptArchiveAs(QString const& file) {
   else if (fileExt == "rvdata2")
     format = Script::VXAce;
   else {
-    QMessageBox::critical(this, "File saving error.", "Unrecognized file extension: " + fileExt);
+    QMessageBox::critical(this, "文件保存错误", "无法识别的文件扩展名: " + fileExt);
     return false;
   }
 
   QFile archiveFile(file);
   if (!archiveFile.open(QFile::WriteOnly)) {
-    QMessageBox::critical(this, "File saving error.", "Cannot open for writing: " + file);
+    QMessageBox::critical(this, "文件保存错误", "无法打开此文件以写入: " + file);
     return false;
   }
 
@@ -804,7 +805,7 @@ bool RGSS_MainWindow::saveScriptArchiveAs(QString const& file) {
     archiveFile.close();
   }
   catch (const QByteArray &) {
-    QMessageBox::critical(this, "File saving error.", "Cannot save: " + file);
+    QMessageBox::critical(this, "文件保存错误", "无法保存: " + file);
     return false;
   }
 

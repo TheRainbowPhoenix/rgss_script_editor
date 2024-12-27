@@ -15,15 +15,15 @@ SearchBar::SearchBar(QWidget *parent)
   connect(edit, SIGNAL(returnPressed()), SLOT(onEnterPressed()));
   connect(edit, SIGNAL(textChanged(QString)), SLOT(invalidateSearch()));
 
-  QPushButton *hide = new QPushButton(tr("Hide"));
+  QPushButton *hide = new QPushButton(tr("隐藏"));
   connect(hide, SIGNAL(clicked()), SIGNAL(hidePressed()));
   connect(edit, SIGNAL(escapePressed()), SIGNAL(hidePressed()));
 
-  not_found = new QLabel(tr("Not found"));
+  not_found = new QLabel(tr("无结果"));
   not_found->setStyleSheet("color: red");
   not_found->hide();
 
-  layout->addWidget(new QLabel(tr("Find:")));
+  layout->addWidget(new QLabel(tr("查找:")));
   layout->addWidget(edit);
   layout->addWidget(not_found);
   layout->addStretch();
