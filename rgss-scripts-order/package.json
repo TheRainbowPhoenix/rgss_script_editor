@@ -1,0 +1,90 @@
+{
+  "name": "rgss-scripts-order",
+  "displayName": "rgss-scripts-order",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "rgss-scripts-order.showFileOrder",
+        "title": "加载 RGSS 脚本顺序"
+      },
+      {
+        "command": "rgss-scripts-order.renameFile",
+        "title": "重命名文件"
+      },
+      {
+        "command": "rgss-scripts-order.deleteFile",
+        "title": "删除文件"
+      },
+      {
+        "command": "rgss-scripts-order.moveUp",
+        "title": "上移"
+      },
+      {
+        "command": "rgss-scripts-order.moveDown",
+        "title": "下移"
+      }
+    ],
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "rgss-scripts-order.renameFile",
+          "group": "navigation",
+          "when": "view == rgssFileOrderView"
+        },
+        {
+          "command": "rgss-scripts-order.deleteFile",
+          "group": "navigation",
+          "when": "view == rgssFileOrderView"
+        },
+        {
+          "command": "rgss-scripts-order.moveUp",
+          "group": "inline",
+          "when": "view == rgssFileOrderView"
+        },
+        {
+          "command": "rgss-scripts-order.moveDown",
+          "group": "inline",
+          "when": "view == rgssFileOrderView"
+        }
+      ]
+    },
+    "views": {
+        "explorer": [
+            {
+                "id": "rgssFileOrderView",
+                "name": "RGSS Scripts Order",
+                "dragAndDrop": true
+            }
+        ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.96.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "eslint": "^9.16.0",
+    "typescript": "^5.7.2",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1"
+  }
+}

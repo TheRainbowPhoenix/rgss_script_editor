@@ -47,7 +47,7 @@ int import(QString src_folder, ScriptList &scripts) {
 		return 1;
 
 	/* Open index */
-	QFile indFile(src_folder + "/index");
+	QFile indFile(src_folder + "/index.rse");
 	if (!indFile.open(QFile::ReadOnly)) {
 		std::cerr << "Cannot open index file" << std::endl;
 		return 1;
@@ -56,7 +56,6 @@ int import(QString src_folder, ScriptList &scripts) {
 	QTextStream indStream(&indFile);
 	indStream.setCodec("UTF-8");
 
-	int lineNumber = 0;
 	while (!indStream.atEnd())
 	{
 		QString line = indStream.readLine();
@@ -77,7 +76,7 @@ int import(QString src_folder, ScriptList &scripts) {
 		}
 
 		QString scName = line.mid(9);
-		QString rbName = QString("%1_%2.rb").arg(lineNumber++, 3, 10, QLatin1Char('0')).arg(line.mid(9));
+		QString rbName = QString("%1.rb").arg(line.mid(9));
     	QFile scFile(src_folder + "/" + rbName);
 
 		if (!scFile.open(QFile::ReadOnly)) {

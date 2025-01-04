@@ -558,7 +558,7 @@ void RGSS_MainWindow::onImportScripts()
     return;
 
   /* Open index */
-  QFile indFile(src_folder + "/index");
+  QFile indFile(src_folder + "/index.rse");
   if (!indFile.open(QFile::ReadOnly)) {
     QMessageBox::critical(this, "导入错误", "无法打开 index 文件");
     return;
@@ -568,7 +568,6 @@ void RGSS_MainWindow::onImportScripts()
   indStream.setCodec("UTF-8");
   ScriptList scripts;
 
-  int lineNumber = 0;
   while (!indStream.atEnd())
   {
     QString line = indStream.readLine();
@@ -589,7 +588,7 @@ void RGSS_MainWindow::onImportScripts()
     }
 
     QString scName = line.mid(9);
-    QString rbName = QString("%1_%2.rb").arg(lineNumber++, 3, 10, QLatin1Char('0')).arg(line.mid(9));
+    QString rbName = QString("%1.rb").arg(line.mid(9));
     QFile scFile(src_folder + "/" + rbName);
 
     if (!scFile.open(QFile::ReadOnly)) {
@@ -630,7 +629,7 @@ void RGSS_MainWindow::onExportScripts()
     return;
 
   /* Write index */
-  QFile indFile(dest_folder + "/index");
+  QFile indFile(dest_folder + "/index.rse");
   if (!indFile.open(QFile::WriteOnly)) {
     QMessageBox::critical(this, "导出错误", "无法创建 index 文件");
     return;
@@ -642,15 +641,20 @@ void RGSS_MainWindow::onExportScripts()
   indStream.setCodec("UTF-8");
   ScriptList scripts = archive_.scriptList();
 
+  int unnamed_count = 0;
   for (int i = 0; i < scripts.count(); ++i)
   {
     const Script &sc = scripts[i];
     const QString scID = QString("%1").arg(sc.magic, 8, 16, QLatin1Char('0')).toUpper();
 
     QString scName = filterInvalidFilenameChars(sc.name);
+    if (scName.isEmpty() || scName == "")
+    {
+      scName = QString("Unnamed%1").arg(++unnamed_count, 3, 10, QLatin1Char('0'));
+    }
     indStream << scID << QChar('~') << scName << "\n";
 
-    QString rbName = QString("%1_%2.rb").arg(i, 3, 10, QLatin1Char('0')).arg(scName);
+    QString rbName = QString("%1.rb").arg(scName);
     QFile scFile(dest_folder + "/" + rbName);
     if (!scFile.open(QFile::WriteOnly)) {
       break;
