@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 let fileTreeProvider: CustomFileTreeProvider;
-let indexFilePath: string;
+let indexFilePath: string | undefined;
 
 // 激活插件时调用的函数
 export function activate(context: vscode.ExtensionContext) {
@@ -116,8 +116,8 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // 更新 index.rse 文件
-function updateIndexFile(indexFilePath: string, oldName: string, newName: string | null) {
-    const content = fs.readFileSync(indexFilePath, 'utf-8');
+function updateIndexFile(filePath: string, oldName: string, newName: string | null) {
+    const content = fs.readFileSync(filePath, 'utf-8');
     const lines = content.split('\n');
     const updatedLines = lines.map(line => {
         const [, fileName] = line.split('~');
@@ -127,18 +127,18 @@ function updateIndexFile(indexFilePath: string, oldName: string, newName: string
         return line;
     }).filter(line => line !== null);
 
-    fs.writeFileSync(indexFilePath, updatedLines.join('\n'), 'utf-8');
+    fs.writeFileSync(filePath, updatedLines.join('\n'), 'utf-8');
 }
 
 // 加载 Index 文件并创建排序视图
-function loadIndexFile(indexFilePath: string) {
-    const fileOrder = parseIndexFile(indexFilePath);
+function loadIndexFile(filePath: string) {
+    const fileOrder = parseIndexFile(filePath);
     if (!fileOrder) {
         vscode.window.showErrorMessage('无法解析 Index 文件');
         return;
     }
 
-    const indexFileName = path.basename(indexFilePath);
+    const indexFileName = path.basename(filePath);
     fileOrder.push(indexFileName);
 
     fileTreeProvider = new CustomFileTreeProvider(fileOrder);
@@ -146,7 +146,7 @@ function loadIndexFile(indexFilePath: string) {
         treeDataProvider: fileTreeProvider
     });
 
-    vscode.window.showInformationMessage('RGSS Scripts Order 视图已载入');
+    vscode.window.showInformationMessage('RGSS Scripts Order 视图加载完毕');
 }
 
 // 解析 index 文件内容
@@ -203,34 +203,36 @@ class CustomFileTreeProvider implements vscode.TreeDataProvider<FileItem> {
     }
 
     moveUp(label: string): void {
+        if (!indexFilePath) return;
         const index = this.fileOrder.indexOf(label);
         if (index > 0 && index !== this.fileOrder.length - 1) {
             // 交换位置
             [this.fileOrder[index - 1], this.fileOrder[index]] = [this.fileOrder[index], this.fileOrder[index - 1]];
             this.refresh();
-            this.updateIndexFile(indexFilePath, index - 1, index);
+            this.updateScriptsIndex(indexFilePath, index - 1, index);
         }
     }
 
     moveDown(label: string): void {
+        if (!indexFilePath) return;
         const index = this.fileOrder.indexOf(label);
         if (index < this.fileOrder.length - 2 && index !== this.fileOrder.length - 1) {
             // 交换位置
             [this.fileOrder[index], this.fileOrder[index + 1]] = [this.fileOrder[index + 1], this.fileOrder[index]];
             this.refresh();
-            this.updateIndexFile(indexFilePath, index, index + 1);
+            this.updateScriptsIndex(indexFilePath, index, index + 1);
         }
     }
 
-    private updateIndexFile(indexFilePath: string, index1: number, index2: number): void {
+    private updateScriptsIndex(filePath: string, index1: number, index2: number): void {
         try {
             // 读取文件内容
-            const content = fs.readFileSync(indexFilePath, 'utf-8');
+            const content = fs.readFileSync(filePath, 'utf-8');
             const lines = content.split('\n');
     
             // 确保索引有效
             if (index1 < 0 || index2 < 0 || index1 >= lines.length || index2 >= lines.length) {
-                vscode.window.showErrorMessage('索引超出范围，无法更新文件顺序');
+                vscode.window.showErrorMessage('索引超出范围，无法更新脚本排序');
                 return;
             }
     
@@ -238,11 +240,11 @@ class CustomFileTreeProvider implements vscode.TreeDataProvider<FileItem> {
             [lines[index1], lines[index2]] = [lines[index2], lines[index1]];
     
             // 将修改后的内容写回文件
-            fs.writeFileSync(indexFilePath, lines.join('\n'), 'utf-8');
+            fs.writeFileSync(filePath, lines.join('\n'), 'utf-8');
     
-            vscode.window.showInformationMessage('文件顺序已成功更新');
+            vscode.window.showInformationMessage('脚本排序已成功更新');
         } catch (err) {
-            vscode.window.showErrorMessage(`更新文件顺序失败: ${(err as Error).message}`);
+            vscode.window.showErrorMessage(`更新脚本排序失败: ${(err as Error).message}`);
         }
     }
 }

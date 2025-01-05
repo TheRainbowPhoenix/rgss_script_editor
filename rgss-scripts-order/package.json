@@ -1,8 +1,9 @@
 {
   "name": "rgss-scripts-order",
   "displayName": "rgss-scripts-order",
-  "description": "",
-  "version": "0.0.1",
+  "description": "rgss-scripts-order extension for VSCode",
+  "publisher": "R-YaTian",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -86,5 +87,9 @@
     "typescript": "^5.7.2",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/R-YaTian/rgss_script_editor/tree/master/rgss-scripts-order"
   }
 }
