@@ -1,0 +1,43 @@
+name: Build Qt5 App on Windows
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install Qt 5 with Qt Installer Action
+      - name: Install Qt 5
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '5.15.2'
+          arch: win64_msvc2019_64
+
+      # Install QScintilla2 via Chocolatey (if available)
+      - name: Install QScintilla2
+        run: choco install qscintilla2-qt5
+
+      # Install jom
+      - name: Install jom
+        run: choco install jom
+
+      # Build with qmake & jom
+      - name: Build with QMake and jom
+        run: |
+          qmake rgss_script_console.pro
+          jom
+
+      # Upload artifact (the built executable)
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rgss_script_editor_build
+          path: |
+            rgss_script_editor.exe
+            # Add any required DLLs if necessary
